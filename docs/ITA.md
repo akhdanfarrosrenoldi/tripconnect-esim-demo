@@ -2,16 +2,16 @@
 
 ## 1. Tujuan dan status
 
-Dokumen ini menerjemahkan [BRD.md](BRD.md) dan [PEP.md](PEP.md) menjadi rancangan teknis untuk **Travel eSIM Ordering & Fulfillment Demo**. Rancangan ditujukan untuk technical test Fullstack Developer JavaMifi dengan tenggat **28 Oktober 2026 pukul 23.59 WIB**.
+Dokumen ini menjelaskan implementasi teknis **Travel eSIM Ordering & Fulfillment Demo** berdasarkan [BRD.md](BRD.md) dan [PEP.md](PEP.md). Proyek ditujukan untuk technical test Fullstack Developer JavaMifi dengan tenggat **28 Oktober 2026 pukul 23.59 WIB**.
 
-**Status:** arsitektur MVP telah diimplementasikan. Pembayaran dan kode eSIM adalah simulasi; satu email konfirmasi nyata telah diterima di Gmail penguji pada 27 Oktober 2026. Hasil pengujian lanjutan dicatat di [QA-TEST.md](QA-TEST.md).
+**Status:** MVP telah diimplementasikan. Pembayaran dan kode eSIM adalah simulasi; email konfirmasi nyata telah diterima di Gmail penguji pada 27 Oktober 2026. Hasil pengujian dicatat di [QA-TEST.md](QA-TEST.md).
 
 ## 2. Prinsip arsitektur
 
 1. Satu repository dan satu aplikasi Next.js untuk mempercepat pengerjaan, dengan modul internal yang memiliki tanggung jawab jelas.
 2. Website dan CMS mengonsumsi API internal yang sama untuk operasi bisnis utama.
 3. Harga, status pesanan, dan otorisasi ditentukan di server; browser tidak dipercaya sebagai sumber kebenaran.
-4. Pembayaran dipisahkan melalui antarmuka adaptor sehingga mock gateway dapat diganti sandbox tanpa mengubah logika pesanan.
+4. Logika callback pembayaran dan pengiriman ke n8n berada di modul layanan terpisah dari UI.
 5. n8n mengurus automasi setelah pembayaran; kegagalan email tidak membatalkan status pembayaran `paid`.
 6. Integrasi memakai ID/event unik agar callback berulang tidak membuat pesanan atau email ganda dalam kondisi normal.
 
@@ -22,9 +22,9 @@ Dokumen ini menerjemahkan [BRD.md](BRD.md) dan [PEP.md](PEP.md) menjadi rancanga
 | UI publik | Next.js App Router + TypeScript | Katalog, detail paket, checkout, status pesanan. |
 | UI admin | Next.js App Router + TypeScript | Login, pengelolaan paket, pemantauan pesanan. |
 | API | Next.js Route Handlers | Endpoint publik/admin, payment callback, dan callback n8n. |
-| Domain services | Modul TypeScript di server | Aturan katalog, harga, order, payment, fulfillment. |
+| Layanan bisnis | Modul TypeScript di server | Pemrosesan callback payment dan dispatch fulfillment. Aturan katalog/order berada di route handler terkait. |
 | Data access | Prisma ORM + PostgreSQL | Model data, query, migrasi, transaksi. |
-| Mock payment | Modul gateway + halaman checkout simulasi | Sesi pembayaran dan hasil sukses/gagal. |
+| Mock payment | Halaman checkout dan endpoint sesi lokal | Sesi pembayaran serta hasil sukses/gagal yang dikirim sebagai callback bertanda tangan. |
 | Automation | n8n sebagai layanan terpisah | Webhook pembayaran, kirim email, lapor hasil. |
 | Email | Send Email node n8n dengan credential SMTP Resend | Mengirim email nyata ke alamat Gmail pembeli/penguji. |
 
@@ -40,54 +40,51 @@ flowchart LR
     C --> API
     API --> S[Domain services]
     S --> DB[(PostgreSQL)]
-    S --> P[Mock payment adapter]
+    S --> P[Mock payment service]
     P --> H[Payment callback API]
     H --> S
     S --> N[n8n webhook]
-    N --> G[Gmail pengirim]
+    N --> G[SMTP Resend]
     G --> I[Inbox Gmail penerima]
     N --> F[Fulfillment callback API]
     F --> DB
 ```
 
-## 4. Batas modul yang diusulkan
+## 4. Struktur modul aktual
 
 ```text
 src/
-  app/
-    (public)/             # katalog, checkout, status
+  app/                    # halaman publik, halaman CMS, dan API Route Handlers
     admin/                # UI CMS
-    mock-payment/         # UI checkout simulasi
-    api/                  # route handlers tipis
+    plans/[id]/           # detail paket dan formulir pemesanan
+    pay/[token]/          # checkout mock
+    orders/[code]/        # status pesanan
+    api/                  # endpoint publik, admin, payment, dan callback n8n
   modules/
-    catalog/              # query paket dan aturan publikasi
-    orders/               # pembuatan order, snapshot harga
-    payments/             # kontrak provider, mock, callback
-    fulfillment/          # event, status konfirmasi, n8n
-    auth/                 # login/session admin
-  db/                     # Prisma client dan repository
-  shared/                 # schema validasi, error, utilitas umum
-prisma/                   # schema dan migrasi
+    payments/service.ts   # verifikasi dan pemrosesan callback payment
+    fulfillment/service.ts # dispatch event pembayaran sukses ke n8n
+  lib/                    # Prisma client, autentikasi, validasi, utilitas
+prisma/                   # schema, migrasi, seed
 n8n/                      # ekspor workflow tanpa credential
 ```
 
-Route handler hanya menerima request, memvalidasi input, memanggil service, dan memetakan response. Aturan bisnis tidak ditaruh langsung di komponen UI atau route handler.
+Route handler katalog, order, dan admin memuat query serta validasi yang dekat dengan endpoint. Proses payment dan fulfillment yang memiliki alur lintas layanan dipisahkan di `src/modules/`. Harga order selalu diambil dari database di server.
 
 ## 5. Model data logis
 
 | Entitas | Field inti | Aturan |
 | --- | --- | --- |
 | `Destination` | `id`, `code`, `name`, `isActive` | `code` unik. |
-| `Plan` | `id`, `destinationId`, `name`, `quota`, `validityDays`, `priceIdr`, `isActive` | Harga integer rupiah; hanya paket aktif dapat dipesan. |
+| `Plan` | `id`, `destinationId`, `name`, `quotaGb`, `validityDays`, `priceIdr`, `isActive` | Harga integer rupiah; hanya paket dan destinasi aktif dapat dipesan. |
 | `Admin` | `id`, `email`, `passwordHash` | Email unik; password tidak disimpan dalam bentuk asli. |
-| `Order` | `id`, `publicCode`, `buyerEmail`, `planId`, `planSnapshot`, `amountIdr`, `paymentStatus`, `createdAt` | `publicCode` tidak mudah ditebak; snapshot menjaga harga historis. |
-| `PaymentSession` | `id`, `orderId`, `tokenHash`, `status`, `expiresAt` | Token checkout dibatasi waktu dan digunakan untuk satu hasil final. |
-| `PaymentEvent` | `id`, `providerEventId`, `orderId`, `result`, `receivedAt` | `providerEventId` unik untuk deduplikasi. |
-| `Fulfillment` | `id`, `orderId`, `status`, `n8nExecutionId`, `emailMessageId`, `error`, `updatedAt` | Satu record per order; hanya dibuat untuk order `paid`. |
+| `Order` | `id`, `publicCode`, `buyerEmail`, `planId`, `planName`, `destinationName`, `quotaGb`, `validityDays`, `amountIdr`, `paymentStatus` | Salinan detail paket dan harga menjaga data historis. |
+| `PaymentSession` | `id`, `orderId`, `tokenHash`, `expiresAt` | Token checkout disimpan sebagai hash dan dibatasi waktu. |
+| `PaymentEvent` | `id`, `providerEventId`, `orderId`, `status`, `createdAt` | `providerEventId` unik untuk deduplikasi. |
+| `Fulfillment` | `id`, `orderId`, `status`, `callbackToken`, `emailMessageId`, `error`, `updatedAt` | Satu record per order `paid`; token callback disimpan sebagai hash. |
 
 Status payment: `pending → paid` atau `pending → failed`. Status fulfillment: `pending → processing → sent` atau `pending/processing → error`. Perubahan status dilakukan dalam transaksi database ketika perlu menjaga konsistensi antara order dan event.
 
-## 6. Kontrak API awal
+## 6. Endpoint yang diimplementasikan
 
 | Method dan path | Akses | Fungsi |
 | --- | --- | --- |
@@ -96,12 +93,12 @@ Status payment: `pending → paid` atau `pending → failed`. Status fulfillment
 | `GET /api/plans/:id` | Publik | Detail paket aktif. |
 | `POST /api/orders` | Publik | Validasi email/paket, hitung harga server, buat order `pending`. |
 | `GET /api/orders/:publicCode` | Pemegang kode | Status ringkas order tanpa data sensitif berlebih. |
-| `POST /api/orders/:publicCode/payment-session` | Pemegang kode | Buat URL checkout mock. |
-| `POST /api/mock-payment/:sessionId/complete` | Pemegang token sesi | Pilih hasil simulasi; mock gateway membuat callback server ke server. |
+| `GET/POST /api/payment/session/:token` | Pemegang token sesi | Baca sesi atau pilih hasil simulasi; endpoint mengirim callback bertanda tangan. |
 | `POST /api/payment/webhook` | Mock gateway | Verifikasi signature dan event ID; perbarui status secara idempoten. |
 | `POST /api/admin/login` | Publik | Login admin dan buat session cookie. |
 | `POST /api/admin/logout` | Admin | Akhiri sesi. |
-| `GET/POST/PATCH /api/admin/plans` | Admin | Kelola paket. Implementasi route detail dapat dipisah per ID. |
+| `GET/POST /api/admin/plans`, `PATCH /api/admin/plans/:id` | Admin | Kelola paket. |
+| `GET/POST /api/admin/destinations`, `PATCH /api/admin/destinations/:id` | Admin | Kelola destinasi. |
 | `GET /api/admin/orders` | Admin | Daftar dan detail pesanan. |
 | `POST /api/internal/fulfillment-result` | n8n | Verifikasi secret; catat hasil email. |
 
@@ -142,8 +139,8 @@ sequenceDiagram
 - Mock gateway menandatangani callback dengan secret bersama; backend menghitung ulang signature sebelum menerima event.
 - `providerEventId` unik dan status order final mencegah callback yang sama diproses dua kali.
 - Dalam satu transaksi, callback sukses mengubah order ke `paid` dan membuat satu fulfillment `pending` dengan `orderId` unik.
-- Pengiriman event ke n8n dilakukan setelah transaksi berhasil. Jika n8n sementara gagal, fulfillment tetap terlihat sebagai `pending/error` untuk dicoba ulang secara terkendali.
-- Pengiriman email tidak memiliki jaminan mutlak *exactly once* saat terjadi kegagalan jaringan setelah relay menerima pesan tetapi sebelum n8n melaporkan hasil. Untuk demo, callback berulang tidak boleh mengirim ulang email; kasus hasil kirim yang tidak pasti perlu ditandai untuk pemeriksaan admin sebelum retry.
+- Pengiriman event ke n8n dilakukan setelah transaksi berhasil. Jika n8n gagal, payment tetap `PAID` dan fulfillment terlihat `ERROR` di CMS. Demo ini tidak menyediakan tombol retry email.
+- Callback payment berulang tidak mengirim ulang email. Pengiriman email tidak memiliki jaminan mutlak *exactly once* saat hasil dari layanan SMTP tidak pasti.
 
 ## 8. Autentikasi, keamanan, dan privasi
 
@@ -183,5 +180,4 @@ Sediakan `.env.example` tanpa nilai rahasia dan `README.md` yang menjelaskan per
 
 - Tidak ada integrasi sistem JavaMifi, operator eSIM, atau transaksi uang sungguhan.
 - URL deployment publik tidak diminta HR; aplikasi lokal yang dapat dijalankan dari repository menjadi target wajib.
-- Provider email pengirim memerlukan akun dan credential yang tersedia pada saat integrasi. Tanpa itu, target email Gmail belum dapat diverifikasi dan tidak boleh dinyatakan selesai.
-- Rancangan endpoint dan struktur folder dapat disesuaikan saat implementasi, selama kontrak bisnis dan bukti penerimaan tetap terpenuhi.
+- Reviewer yang ingin menerima email di Gmail sendiri perlu menyiapkan akun dan credential Resend di n8n; credential kandidat tidak disertakan di repository.

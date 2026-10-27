@@ -113,7 +113,7 @@ Prototipe ini menunjukkan bagaimana website pelanggan, CMS admin, API, pembayara
 | Payment Gateway sandbox/mock | Checkout serta simulasi pembayaran sukses/gagal. |
 | Automation Tools menggunakan n8n | Workflow webhook pembayaran berhasil dan bukti eksekusinya. |
 | Konsep, struktur, modul, arsitektur | BRD ini, struktur kode, diagram komponen, dan penjelasan README. |
-| Frontend framework modern | Frontend direncanakan memakai Next.js + TypeScript. |
+| Frontend framework modern | Frontend menggunakan Next.js + TypeScript. |
 | Backend bebas, sebaiknya bukan Firebase | API aplikasi dan database PostgreSQL; tanpa Firebase. |
 | GitHub/GitLab dan README | Repository source code dengan instruksi serta penjelasan fitur/arsitektur. |
 | Rabu pukul 23.59 WIB | Submission sebelum 28 Oktober 2026 pukul 23.59 WIB. |
@@ -122,14 +122,14 @@ Prototipe ini menunjukkan bagaimana website pelanggan, CMS admin, API, pembayara
 
 MVP dinyatakan selesai ketika reviewer dapat: (1) menjalankan aplikasi dari README, (2) mengubah paket di CMS dan melihat perubahan pada website, (3) membuat pesanan, (4) menjalankan pembayaran sukses dan gagal, (5) melihat workflow n8n berjalan hanya untuk pembayaran sukses, dan (6) membaca pembagian modul serta arsitektur di repository.
 
-## 13. Asumsi, dependensi, dan risiko
+## 13. Batas dan dependensi demo
 
-| Item | Dampak | Penanganan |
-| --- | --- | --- |
-| Tidak ada akses API internal JavaMifi | Integrasi nyata ke sistem perusahaan tidak dapat dilakukan. | Gunakan API internal milik prototipe. |
-| Kredensial payment sandbox belum tersedia | Integrasi gateway nyata dapat memakan waktu. | Gunakan mock payment yang diizinkan recruiter. |
-| Akses akun pengirim email belum tersedia | Email tidak dapat dikirim ke Gmail sungguhan sebelum kredensial dikonfigurasi. | Konfigurasi kredensial pengirim di n8n, simpan di luar repository, dan uji penerimaan email sebelum submission. |
-| Tenggat dekat | Risiko fitur utama tidak selesai. | Selesaikan alur end-to-end dan dokumentasi sebelum fitur tambahan. |
+| Item | Keputusan atau kebutuhan reviewer |
+| --- | --- |
+| Sistem JavaMifi | Demo independen; tidak memerlukan akses ke sistem internal JavaMifi. |
+| Payment | Mock gateway lokal yang diizinkan recruiter; tidak memerlukan akun sandbox atau uang sungguhan. |
+| Email nyata | Reviewer menyiapkan akun dan API key Resend sendiri di n8n bila ingin menerima email ke Gmail miliknya. Credential kandidat tidak ada di repository. |
+| Cara menjalankan | Node.js, Docker Desktop, migrasi/seed, serta aktivasi workflow dijelaskan di README. |
 
 ## 14. Keputusan kerja dan hal yang belum diwajibkan HR
 

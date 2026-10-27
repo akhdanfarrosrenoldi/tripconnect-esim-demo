@@ -125,7 +125,7 @@ npm run build
 npm run lint
 ```
 
-Kasus positif, kasus negatif, hasil dari clone bersih, dan cacat setup yang ditemukan dicatat di [docs/QA-TEST.md](docs/QA-TEST.md). Workflow email nyata memerlukan credential SMTP yang dikonfigurasi secara lokal; file ekspor workflow tidak memuat secret.
+Kasus positif, kasus negatif, dan hasil dari clone bersih dicatat di [docs/QA-TEST.md](docs/QA-TEST.md). Workflow email nyata memerlukan credential SMTP yang dikonfigurasi secara lokal; file ekspor workflow tidak memuat secret.
 
 ## Batas demo
 

@@ -23,7 +23,7 @@
 
 Pembayaran tidak memindahkan uang dan kode eSIM tidak mengaktifkan layanan. Keduanya harus ditandai sebagai simulasi di UI dan README.
 
-## 3. Keputusan arsitektur awal
+## 3. Keputusan arsitektur
 
 | Komponen | Pilihan kerja | Tanggung jawab |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ Pembayaran tidak memindahkan uang dan kode eSIM tidak mengaktifkan layanan. Kedu
 | Automation | n8n | Menerima event pembayaran sukses, mengirim email, melaporkan hasil. |
 | Email | SMTP Resend yang dikonfigurasi di n8n | Pengiriman email nyata ke Gmail penguji. API key Resend disimpan di credential n8n, bukan repository. |
 
-Struktur kode perlu menjaga pemisahan `public UI`, `admin UI`, `API handlers`, `business services`, `data access`, `payment adapter`, dan `automation adapter`. Pemisahan ini lebih penting untuk penilaian arsitektur daripada jumlah fitur tambahan.
+Struktur kode memisahkan UI publik, UI admin, API handlers, layanan payment/fulfillment, akses data, dan workflow n8n. Struktur aktual dijelaskan di [ITA.md](ITA.md).
 
 ## 4. Urutan eksekusi
 
@@ -74,7 +74,7 @@ Data pesanan tidak boleh mengandalkan harga paket terkini setelah checkout. Emai
 | Backend → n8n | Event `order.paid` dan order ID | Penerimaan event | Webhook lokal diakses melalui loopback; jangan buka port n8n ke internet tanpa autentikasi tambahan. |
 | n8n → backend | Order ID, hasil email, bukti autentikasi | Status fulfillment | Mencegah pembaruan status oleh pihak tidak sah. |
 
-Endpoint final, payload, dan contoh request ditulis di README setelah implementasi. Integrasi API internal harus tampak jelas dan dapat diuji.
+Endpoint utama diringkas di README. Validasi input ada di `src/lib/schemas.ts`, sedangkan pemrosesan payment/fulfillment ada di `src/modules/`.
 
 ## 7. Rencana verifikasi
 
@@ -88,17 +88,14 @@ Endpoint final, payload, dan contoh request ditulis di README setelah implementa
 | Akses CMS tanpa login | Halaman/API admin menolak akses. |
 | Menjalankan dari README | Reviewer dapat menyiapkan environment, database, n8n, dan data contoh. |
 
-Simpan bukti berupa tangkapan layar atau rekaman singkat untuk CMS, checkout, eksekusi n8n, dan email di Gmail. Jangan menampilkan secret atau data pribadi dalam bukti.
+Hasil kasus positif dan negatif, termasuk bukti email yang diterima di Gmail, dicatat di [QA-TEST.md](QA-TEST.md) tanpa memuat secret.
 
-## 8. Risiko dan tindakan
+## 8. Dependensi saat review
 
-| Risiko | Dampak | Tindakan |
-| --- | --- | --- |
-| Kredensial pengirim email belum tersedia atau koneksi Gmail gagal | Persyaratan demo email nyata tidak terbukti. | Uji pengiriman n8n → Gmail sejak awal; gunakan akun pengirim khusus demo dan simpan kredensial hanya di n8n. |
-| Waktu tersisa sangat pendek | Fitur inti atau README tidak selesai. | Hindari fitur tambahan; selesaikan satu alur penuh lebih dulu. |
-| Callback mock payment terlalu sederhana | Integrasi gateway tampak hanya perubahan status manual. | Gunakan halaman checkout, sesi payment, callback terverifikasi, dan idempotensi. |
-| Layanan n8n tidak aktif saat demo | Email tidak terkirim. | Dokumentasikan cara start dan aktivasi workflow; perlihatkan status kegagalan tanpa membatalkan payment `paid`. |
-| Reviewer sulit menjalankan proyek | Penilaian implementasi terhambat. | Sediakan environment contoh, seed data, Docker Compose bila dipakai, dan langkah demo singkat. |
+| Dependensi | Langkah reviewer |
+| --- | --- |
+| Aplikasi lokal | Ikuti README untuk Node.js, Docker Compose, migrasi, seed, dan start aplikasi. |
+| Email nyata | Impor dan aktifkan workflow n8n; isi credential SMTP Resend milik reviewer sendiri. Tanpa itu, payment tetap berjalan dan status email tampil `ERROR`. |
 
 ## 9. Kriteria selesai dan penyerahan
 
