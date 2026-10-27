@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PROCESSING
+  SENT
+  ERROR
+}
+
+model Destination {
+  id       String @id @default(cuid())
+  code     String @unique
+  name     String
+  emoji    String
+  isActive Boolean @default(true)
+  plans    Plan[]
+}
+
+model Plan {
+  id            String      @id @default(cuid())
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  name          String
+  quotaGb       Int
+  validityDays  Int
+  priceIdr      Int
+  isActive      Boolean     @default(true)
+  description   String
+  orders        Order[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([destinationId, isActive])
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Order {
+  id                String            @id @default(cuid())
+  publicCode        String            @unique
+  buyerEmail        String
+  planId            String
+  plan              Plan              @relation(fields: [planId], references: [id])
+  planName          String
+  destinationName   String
+  quotaGb           Int
+  validityDays      Int
+  amountIdr         Int
+  paymentStatus     PaymentStatus     @default(PENDING)
+  paymentSession    PaymentSession?
+  paymentEvents     PaymentEvent[]
+  fulfillment       Fulfillment?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([createdAt])
+}
+
+model PaymentSession {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PaymentEvent {
+  id              String        @id @default(cuid())
+  providerEventId String        @unique
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+  status          PaymentStatus
+  createdAt       DateTime      @default(now())
+}
+
+model Fulfillment {
+  id             String            @id @default(cuid())
+  orderId        String            @unique
+  order          Order             @relation(fields: [orderId], references: [id])
+  status         FulfillmentStatus @default(PENDING)
+  callbackToken  String            @unique
+  emailMessageId String?
+  error          String?
+  updatedAt      DateTime          @updatedAt
+}

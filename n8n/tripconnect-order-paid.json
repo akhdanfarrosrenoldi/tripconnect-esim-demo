@@ -1,0 +1,85 @@
+{
+  "name": "TripConnect - Paid Order Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-paid",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "fa922609-6499-47bb-8cbe-e28a0ed266d4",
+      "name": "Order Paid Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300],
+      "webhookId": "b289b193-af53-4adb-9a8e-82e5417440ae"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('Order Paid Webhook').item.json.body.fromEmail }}",
+        "toEmail": "={{ $('Order Paid Webhook').item.json.body.buyerEmail }}",
+        "subject": "={{ 'Konfirmasi pesanan ' + $('Order Paid Webhook').item.json.body.publicCode + ' - TripConnect Demo' }}",
+        "emailFormat": "html",
+        "html": "={{ '<h2>Pesanan travel eSIM simulasi berhasil!</h2><p>Halo, pembayaran untuk pesanan <b>' + $('Order Paid Webhook').item.json.body.publicCode + '</b> sudah berhasil.</p><p>Paket: ' + $('Order Paid Webhook').item.json.body.planName + ' (' + $('Order Paid Webhook').item.json.body.destinationName + ')</p><p><b>Kode aktivasi contoh: DEMO-' + $('Order Paid Webhook').item.json.body.publicCode.slice(0,8).toUpperCase() + '</b></p><p>Kode ini hanya untuk technical test dan tidak dapat mengaktifkan eSIM sungguhan.</p>' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a3146f70-1442-40c8-a9ae-51296b7e4353",
+      "name": "Send Gmail Confirmation",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "onError": "continueErrorOutput",
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order Paid Webhook').item.json.body.callbackUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ orderId: $('Order Paid Webhook').item.json.body.orderId, callbackToken: $('Order Paid Webhook').item.json.body.callbackToken, status: $json.messageId ? 'SENT' : 'ERROR', emailMessageId: $json.messageId || '', error: $json.messageId ? undefined : 'SMTP tidak mengembalikan messageId; email belum terkonfirmasi terkirim' }) }}",
+        "options": {}
+      },
+      "id": "1f47d4a5-ac72-4e53-b35d-09461330b5fd",
+      "name": "Report Email Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Order Paid Webhook').item.json.body.callbackUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ orderId: $('Order Paid Webhook').item.json.body.orderId, callbackToken: $('Order Paid Webhook').item.json.body.callbackToken, status: 'ERROR', error: String($json.error?.message || $json.error || 'Email gagal dikirim') }) }}",
+        "options": {}
+      },
+      "id": "4d5f9da0-bf23-46bd-a71d-b17c8a1ef8f8",
+      "name": "Report Email Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 480]
+    }
+  ],
+  "connections": {
+    "Order Paid Webhook": {
+      "main": [[{ "node": "Send Gmail Confirmation", "type": "main", "index": 0 }]]
+    },
+    "Send Gmail Confirmation": {
+      "main": [
+        [{ "node": "Report Email Result", "type": "main", "index": 0 }],
+        [{ "node": "Report Email Error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}
