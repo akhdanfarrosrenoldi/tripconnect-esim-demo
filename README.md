@@ -51,9 +51,11 @@ Kode dipisah di `src/app` (UI dan API), `src/modules` (logika bisnis/integrasi),
 2. Instal dependensi dan jalankan layanan:
 
    ```powershell
-   npm install
+   npm ci
    docker compose up -d
    ```
+
+   `npm ci` otomatis menjalankan `prisma generate` melalui skrip `postinstall`.
 
 3. Siapkan database dan data contoh:
 
@@ -113,7 +115,7 @@ npm run build
 npm run lint
 ```
 
-Pengujian manual utama: paket aktif/nonaktif, login admin, payment sukses/gagal, callback berulang, dan status email. Workflow email nyata memerlukan credential SMTP yang dikonfigurasi secara lokal; file ekspor workflow tidak memuat secret.
+Kasus positif, kasus negatif, hasil dari clone bersih, dan cacat setup yang ditemukan dicatat di [docs/QA-TEST.md](docs/QA-TEST.md). Workflow email nyata memerlukan credential SMTP yang dikonfigurasi secara lokal; file ekspor workflow tidak memuat secret.
 
 ## Batas demo
 
