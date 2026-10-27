@@ -35,7 +35,7 @@ export default function HomePage() {
           <h1>Jelajah dunia.<br/><span>Tetap terhubung.</span></h1>
           <p>Travel eSIM praktis untuk setiap perjalanan. Pilih destinasi, temukan paket yang pas, dan siap terkoneksi tanpa ribet.</p>
           <div className="hero-actions"><Link href="/#paket" className="button button-yellow">Temukan paketmu <ArrowRight size={18}/></Link><span className="hero-note"><Check size={17}/> Alur demo mudah dicoba</span></div>
-          <div className="hero-stats"><div><strong>5</strong><span>Destinasi demo</span></div><div><strong>7</strong><span>Paket contoh</span></div><div><strong>100%</strong><span>Digital</span></div></div>
+          <div className="hero-stats"><div><strong>{loading ? "—" : destinations.length}</strong><span>Destinasi demo</span></div><div><strong>{loading ? "—" : plans.length}</strong><span>Paket tersedia</span></div><div><strong>100%</strong><span>Digital</span></div></div>
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="orbit orbit-one"/><div className="orbit orbit-two"/>

@@ -4,7 +4,7 @@
 
 Dokumen ini menerjemahkan [BRD.md](BRD.md) dan [PEP.md](PEP.md) menjadi rancangan teknis untuk **Travel eSIM Ordering & Fulfillment Demo**. Rancangan ditujukan untuk technical test Fullstack Developer JavaMifi dengan tenggat **28 Oktober 2026 pukul 23.59 WIB**.
 
-**Status:** rancangan; belum ada aplikasi yang diimplementasikan atau email yang telah dikirim. Pembayaran dan kode eSIM adalah simulasi. Email konfirmasi ditargetkan benar-benar diterima di Gmail setelah kredensial pengirim dikonfigurasi dan alur diuji.
+**Status:** arsitektur MVP telah diimplementasikan. Pembayaran dan kode eSIM adalah simulasi; satu email konfirmasi nyata telah diterima di Gmail penguji pada 27 Oktober 2026. Hasil pengujian lanjutan dicatat di [QA-TEST.md](QA-TEST.md).
 
 ## 2. Prinsip arsitektur
 

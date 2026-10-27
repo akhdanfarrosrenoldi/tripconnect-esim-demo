@@ -6,7 +6,7 @@
 | --- | --- |
 | Nama proyek | Travel eSIM Ordering & Fulfillment Demo |
 | Tujuan | Technical test posisi Fullstack Developer untuk JavaMifi |
-| Status | Draft untuk diskusi dan persetujuan ruang lingkup |
+| Status | Ruang lingkup MVP telah diimplementasikan; lihat hasil QA di [QA-TEST.md](QA-TEST.md) |
 | Sumber kebutuhan | Ketentuan recruiter dalam [recruit-brief.md](recruit-brief.md) |
 | Tenggat | Rabu, 28 Oktober 2026 pukul 23.59 WIB (dikonfirmasi kandidat) |
 

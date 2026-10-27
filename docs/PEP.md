@@ -9,7 +9,7 @@
 | Acuan | [BRD.md](BRD.md) dan [recruit-brief.md](recruit-brief.md) |
 | Tenggat | Rabu, 28 Oktober 2026 pukul 23.59 WIB |
 | Hasil akhir | Repository GitHub/GitLab berisi website, CMS, API, mock payment, workflow n8n, README, dan bukti alur demo |
-| Status | Rencana; implementasi belum dimulai |
+| Status | Tahap wajib telah diimplementasikan; verifikasi tercatat di [QA-TEST.md](QA-TEST.md) |
 
 ## 2. Target alur end-to-end
 

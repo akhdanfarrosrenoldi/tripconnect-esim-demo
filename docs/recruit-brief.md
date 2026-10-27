@@ -33,7 +33,7 @@
 
 ## Pemetaan ketentuan HR dan status saat ini
 
-Status di bawah menggambarkan hasil implementasi saat pembaruan terakhir. Email nyata sudah diterima di Gmail penguji; publikasi repository masih memerlukan penyelesaian.
+Status di bawah menggambarkan hasil implementasi per 27 Oktober 2026. Email nyata sudah diterima di Gmail penguji dan source code telah dipublikasikan di [repository GitHub pribadi](https://github.com/akhdanfarrosrenoldi/tripconnect-esim-demo). Penyerahan tautan kepada recruiter tetap menjadi langkah kandidat.
 
 | Ketentuan HR | Rencana pemenuhan | Status implementasi |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ Status di bawah menggambarkan hasil implementasi saat pembaruan terakhir. Email 
 | Struktur sistem, pembagian modul, implementasi arsitektur | Pisahkan UI publik, CMS, API, bisnis, data, payment, dan automation; jelaskan dengan diagram | Dibuat; diagram arsitektur di README |
 | Frontend framework modern | Next.js + TypeScript | Dibuat |
 | Backend bebas, sebisa mungkin bukan Firebase | Backend melalui Next.js Route Handlers dan PostgreSQL | Dibuat tanpa Firebase |
-| Source code GitHub/GitLab | Unggah aplikasi ke repository | Belum diunggah |
+| Source code GitHub/GitLab | Unggah aplikasi ke repository | Sudah diunggah ke GitHub publik |
 | README instalasi, menjalankan, arsitektur, fitur | Tulis README lengkap setelah implementasi | Dibuat |
 | Submit Rabu pukul 23.59 WIB | Serahkan sebelum 28 Oktober 2026 pukul 23.59 WIB | Belum dilakukan; tanggal dikonfirmasi kandidat |
 
@@ -107,10 +107,11 @@ Next.js mendukung [Route Handlers](https://nextjs.org/docs/app/getting-started/r
 
 ## Checklist penyerahan
 
-- [ ] Website dan CMS dapat dijalankan.
-- [ ] Integrasi API dapat ditunjukkan.
-- [ ] Alur pembayaran sandbox/mock dapat ditunjukkan sampai status akhir.
-- [ ] Workflow n8n dan hasil eksekusinya dapat ditunjukkan.
-- [ ] Struktur modul dan diagram/alur arsitektur dijelaskan di README.
-- [ ] README memuat prasyarat, variabel environment, instalasi, cara menjalankan, dan fitur.
-- [ ] Source code diunggah ke GitHub/GitLab sebelum tenggat.
+- [x] Website dan CMS dapat dijalankan.
+- [x] Integrasi API internal dapat ditunjukkan.
+- [x] Alur pembayaran mock dapat ditunjukkan sampai status akhir.
+- [x] Workflow n8n dan hasil eksekusi email ke Gmail dapat ditunjukkan.
+- [x] Struktur modul dan diagram/alur arsitektur dijelaskan di README.
+- [x] README memuat prasyarat, variabel environment, instalasi, cara menjalankan, dan fitur.
+- [x] Source code diunggah ke GitHub/GitLab sebelum tenggat.
+- [ ] Tautan repository diserahkan kepada recruiter sebelum 28 Oktober 2026 pukul 23.59 WIB.

@@ -36,7 +36,7 @@ flowchart LR
   Result --> DB
 ```
 
-Kode dipisah di `src/app` (UI dan API), `src/modules` (logika bisnis/integrasi), `src/lib` (database, auth, validasi), `prisma` (model/migrasi/seed), serta `n8n` (workflow ekspor). Rancangan lebih rinci ada di [ITA.md](ITA.md).
+Kode dipisah di `src/app` (UI dan API), `src/modules` (logika bisnis/integrasi), `src/lib` (database, auth, validasi), `prisma` (model/migrasi/seed), serta `n8n` (workflow ekspor). Rancangan lebih rinci ada di [docs/ITA.md](docs/ITA.md). Brief, BRD, PEP, dan matriks QA ada di [`docs/`](docs/).
 
 ## Prasyarat
 
