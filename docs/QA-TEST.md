@@ -9,7 +9,7 @@ Dokumen ini mencatat pengujian dari checkout baru dengan database terpisah. Foku
 | Item | Nilai |
 | --- | --- |
 | Tanggal | 27 Oktober 2026 (WIB) |
-| Sumber | Clone baru dari commit `75d9003`; perbaikan setup Prisma diterapkan lalu `npm ci` diulang. Commit final akan memuat perbaikan itu. |
+| Sumber | Clone awal dari commit `75d9003` untuk seluruh kasus; clone ulang dari repository publik pada commit `837bfa9` untuk memverifikasi setup yang telah diperbaiki. |
 | Aplikasi | Next.js pada port 3100 |
 | Database | PostgreSQL `tripconnect_qa`, terpisah dari database demo |
 | n8n | Instance lokal dengan workflow `order-paid` dan credential SMTP Resend yang sudah tersedia |
@@ -27,7 +27,7 @@ Dokumen ini mencatat pengujian dari checkout baru dengan database terpisah. Foku
 
 | ID | Kasus | Ekspektasi | Hasil aktual |
 | --- | --- | --- | --- |
-| P01 | Install, migrasi, seed dari clone baru | Aplikasi dapat dijalankan; paket contoh tersedia | **Lulus setelah perbaikan**: 5 destinasi dan 7 paket terbuat. |
+| P01 | Install, migrasi, seed dari clone baru | Aplikasi dapat dijalankan; paket contoh tersedia | **Lulus setelah perbaikan**: clone publik `837bfa9` menjalankan `npm ci` → Prisma Client tergenerate → migrasi/seed lulus; 5 destinasi dan 7 paket terbuat. |
 | P02 | Katalog dan angka beranda | API memberi paket aktif; jumlah destinasi/paket sesuai data | **Lulus**: awal 5/7; setelah tambah paket, beranda menampilkan 5/8. |
 | P03 | Login admin yang benar | Sesi dibuat; API admin dapat diakses | **Lulus**: login 200, API admin 200. |
 | P04 | CMS buat/ubah/nonaktifkan paket | Perubahan tercermin di katalog; paket nonaktif hilang | **Lulus**: paket QA dibuat, harga berubah 55.000→65.000, lalu hilang dari API publik saat dinonaktifkan. |
@@ -58,8 +58,11 @@ Dokumen ini mencatat pengujian dari checkout baru dengan database terpisah. Foku
 
 Pada percobaan pertama, `npm ci` dan migrasi lulus, tetapi seed gagal dengan pesan `@prisma/client did not initialize yet`. Penyebabnya: Prisma Client belum digenerate dalam setup baru. Skrip `postinstall: prisma generate` ditambahkan ke `package.json`, lalu `npm ci` diulang dan seed lulus. README memakai `npm ci` serta menjelaskan langkah otomatis tersebut.
 
+Clone ulang langsung dari URL GitHub publik pada commit `837bfa9` mengonfirmasi perbaikan tanpa menyalin kode: `npm ci`, `npx prisma migrate deploy`, dan `npm run db:seed` semuanya exit 0. Aplikasi dari clone publik di port 3200 mengembalikan 7 paket melalui API dan HTTP 401 untuk API admin tanpa login.
+
 ### Batas pembuktian
 
 - `SENT` dan SMTP message ID menunjukkan layanan pengirim menerima pesan. Penerimaan akhir diverifikasi terpisah dengan melihat subjek dan kode order QA di Inbox Gmail penguji pada 27 Oktober 2026.
 - Kasus negatif diuji melalui HTTP/API dan inspeksi database QA; interaksi visual CMS untuk membuat paket belum diuji dengan klik manual, tetapi API yang dipakai CMS diuji dan beranda diperiksa melalui browser.
 - Pengujian memakai mock payment yang diizinkan HR, bukan transaksi uang sungguhan. Kredensial SMTP tidak terdapat di clone/repository; clone memakai credential n8n lokal yang sudah dikonfigurasi sebelumnya.
+- `npm audit` masih melaporkan 4 advisori tingkat **high** pada pohon dependensi Prisma (`deepmerge-ts` dan `effect` serta paket induknya). Perbaikan otomatis yang ditawarkan npm adalah upgrade Prisma major, sehingga belum diterapkan pada demo dengan tenggat singkat. Ini risiko pemeliharaan dependensi, bukan kegagalan kasus fungsional di atas.
