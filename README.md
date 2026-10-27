@@ -2,6 +2,16 @@
 
 Demo fullstack pemesanan travel eSIM yang terinspirasi oleh domain bisnis JavaMifi. Aplikasi ini **bukan produk resmi JavaMifi**. Pembayaran dan kode aktivasi eSIM bersifat simulasi; email konfirmasi dikirim sungguhan melalui workflow n8n setelah layanan pengirim dikonfigurasi.
 
+## Mulai di sini untuk reviewer
+
+| Tujuan | Langkah |
+| --- | --- |
+| Menilai konsep dan arsitektur | Baca diagram di bawah, [BRD](docs/BRD.md), [ITA](docs/ITA.md), dan [hasil QA](docs/QA-TEST.md). |
+| Mencoba website, CMS, API, dan mock payment | Ikuti [instalasi lokal](#instalasi-dan-menjalankan), lalu jalankan [skenario demo](#skenario-demo-untuk-reviewer). Tidak perlu akun payment gateway. |
+| Membuktikan email masuk ke Gmail sendiri | Tambahkan [konfigurasi n8n dan SMTP Resend](#menyiapkan-n8n-dan-email-gmail). Reviewer memerlukan akun/API key Resend sendiri; credential kandidat tidak disertakan dalam Git. |
+
+Tanpa credential SMTP, website, CMS, dan pembayaran mock tetap bisa dicoba. Pesanan sukses tetap berstatus `PAID`, sementara pengiriman email ditandai `ERROR` di CMS. Bukti alur email yang sudah diuji kandidat tercatat di [QA-TEST.md](docs/QA-TEST.md). Tidak ada URL deployment publik; demo dijalankan lokal.
+
 ## Fitur
 
 - Website publik: katalog paket, filter destinasi, detail, checkout, dan status pesanan.
@@ -82,7 +92,7 @@ Kode dipisah di `src/app` (UI dan API), `src/modules` (logika bisnis/integrasi),
 4. Simpan dan aktifkan workflow. URL production webhook harus sesuai `N8N_WEBHOOK_URL`.
 5. Buat pesanan menggunakan alamat Gmail penerima yang dapat Anda cek. Pilih **Simulasikan sukses**. Pastikan order `PAID`, fulfillment `SENT`, eksekusi n8n sukses, dan pesan muncul di inbox Gmail (periksa Spam bila perlu).
 
-Pada instance lokal pengembangan, workflow aktif dan credential SMTP Resend sudah terhubung. Satu order pembayaran sukses telah menghasilkan status `PAID`/`SENT`, dan pesan konfirmasi diterima di Inbox Gmail penguji pada 27 Oktober 2026. Credential hanya tersimpan pada volume n8n lokal; reviewer tetap perlu mengonfigurasi credential sendiri setelah mengimpor workflow.
+Pada mesin kandidat saat pengujian, workflow aktif dan credential SMTP Resend sudah terhubung. Order pembayaran sukses menghasilkan status `PAID`/`SENT`, dan pesan konfirmasi diterima di Inbox Gmail penguji pada 27 Oktober 2026. Credential hanya tersimpan pada volume n8n lokal milik kandidat; reviewer tetap perlu mengonfigurasi credential sendiri setelah mengimpor workflow.
 
 ## Skenario demo untuk reviewer
 
