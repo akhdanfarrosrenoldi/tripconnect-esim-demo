@@ -8,7 +8,7 @@ Dokumen ini mencatat pengujian dari checkout baru dengan database terpisah. Foku
 
 | Item | Nilai |
 | --- | --- |
-| Tanggal | 27 Oktober 2026 (WIB) |
+| Tanggal | 27 Oktober 2026 (clone/API) dan 28 Oktober 2026 (UI desktop, n8n, Gmail), WIB |
 | Sumber | Clone terpisah untuk pengujian alur; instalasi, migrasi, dan seed diverifikasi ulang dari clone repository publik pada revisi `aad9085`. |
 | Aplikasi | Next.js pada port 3100 |
 | Database | PostgreSQL `tripconnect_qa`, terpisah dari database demo |
@@ -57,6 +57,25 @@ Dokumen ini mencatat pengujian dari checkout baru dengan database terpisah. Foku
 Clone dari URL GitHub publik pada revisi `aad9085` menjalankan `npm ci`, `npx prisma migrate deploy`, dan `npm run db:seed` dengan exit 0. Aplikasi dari clone tersebut di port 3200 mengembalikan 7 paket melalui API dan HTTP 401 untuk API admin tanpa login.
 
 - `SENT` dan SMTP message ID menunjukkan layanan pengirim menerima pesan. Penerimaan akhir diverifikasi terpisah dengan melihat subjek dan kode order QA di Inbox Gmail penguji pada 27 Oktober 2026.
-- Kasus negatif diuji melalui HTTP/API dan inspeksi database QA; interaksi visual CMS untuk membuat paket belum diuji dengan klik manual, tetapi API yang dipakai CMS diuji dan beranda diperiksa melalui browser.
+- Kasus negatif API diuji melalui HTTP dan inspeksi database QA. Alur browser desktop dan CMS diuji ulang secara manual pada 28 Oktober 2026 seperti tercatat di bawah.
 - Pengujian memakai mock payment yang diizinkan HR, bukan transaksi uang sungguhan. Kredensial SMTP tidak terdapat di clone/repository; clone memakai credential n8n lokal yang sudah dikonfigurasi sebelumnya.
 - `npm audit` masih melaporkan 4 advisori tingkat **high** pada pohon dependensi Prisma (`deepmerge-ts` dan `effect` serta paket induknya). Perbaikan otomatis yang ditawarkan npm adalah upgrade Prisma major, sehingga belum diterapkan pada demo dengan tenggat singkat. Ini risiko pemeliharaan dependensi, bukan kegagalan kasus fungsional di atas.
+
+## Uji ulang UI desktop dan email (28 Oktober 2026)
+
+Pengujian dilakukan pada viewport browser **1440 × 900**, aplikasi lokal port 3000, database demo lokal, n8n lokal yang sudah dikonfigurasi, dan Gmail penerima yang sudah login. Ini uji UI di instalasi yang ada; hasil clone bersih tetap mengacu pada bagian sebelumnya.
+
+| Alur | Hasil aktual |
+| --- | --- |
+| Beranda dan katalog | **Lulus**: 5 destinasi/7 paket aktif tampil. Filter Malaysia menyisakan paket Malaysia; pencarian `Singapore` dengan filter itu menampilkan keadaan tanpa hasil. |
+| Detail dan validasi checkout | **Lulus**: detail Singapore Quick Trip 3GB memuat harga Rp39.000. Email tidak valid ditolak validasi browser; email valid membuat sesi mock payment. |
+| Pembayaran sukses | **Lulus**: order `b0865803a9a9fc4b6e128c35` menjadi `PAID`; halaman status berubah dari email `PROCESSING` menjadi `SENT`. Membuka ulang sesi final hanya menampilkan tautan status pesanan, tanpa tombol pembayaran ulang. |
+| Pembayaran gagal | **Lulus**: order `765a965e987965c8206126eb` menjadi `FAILED`, tanpa fulfillment. Pencarian kode order itu di Gmail tidak menemukan email. |
+| CMS autentikasi | **Lulus**: password salah ditolak; login akun QA sementara berhasil; logout dan reload kembali menampilkan form login. Akun QA sementara dihapus setelah pengujian. |
+| CMS pesanan | **Lulus**: daftar menampilkan order sukses `PAID`/`SENT` dan order gagal `FAILED`/tanpa email. Detail order sukses menampilkan SMTP Message ID. |
+| CMS destinasi/paket | **Lulus**: destinasi dan paket QA dibuat lewat form UI, destinasi diubah, harga paket diubah Rp45.000→Rp55.000 dan terlihat di katalog publik. Form paket kosong ditolak. Paket dan destinasi dinonaktifkan lalu hilang dari katalog. Data QA sementara dihapus dari database setelahnya; katalog kembali 5 destinasi/7 paket. |
+| n8n | **Lulus**: workflow `TripConnect - Paid Order Email` aktif. Eksekusi terbaru ID 9 berstatus `Success` pada 19.13 WIB, 28 Oktober 2026. |
+| Gmail nyata | **Lulus**: Inbox Gmail penerima memuat tepat satu hasil untuk kode order sukses tersebut dari `onboarding@resend.dev` pukul 19.13 WIB. Isi email menyebut paket Singapore Quick Trip 3GB dan kode demo `DEMO-B0865803`. |
+| URL order tidak dikenal | **Lulus**: halaman status menampilkan “Pesanan tidak ditemukan.” |
+
+Pengujian ini tidak mencakup viewport ponsel sesuai cakupan uji desktop. Setup akun n8n/Resend baru dari nol belum diulang pada 28 Oktober; workflow dan SMTP lokal yang sudah dikonfigurasi berhasil dipakai untuk pengiriman nyata.
